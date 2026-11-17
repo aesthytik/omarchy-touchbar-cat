@@ -42,11 +42,28 @@ After a `tiny-dfr` package update, run setup again to rebuild.
 ## How it draws on the Touch Bar
 
 `tiny-dfr-plus.patch` lets a local program take over the whole bar: it sends frames
-(`TDT1`, width, height, one RGB332 byte per pixel) to the abstract unix socket
-`@tiny-dfr-takeover`, and the bar shows them until they stop for half a second. While a
+(`TDT1`, width, height, one RGB332 byte per pixel) to the unix socket
+`/run/tiny-dfr/takeover.sock`, and the bar shows them until they stop for half a second. While a
 program has the bar, tiny-dfr sends it only Esc, Space, Up and Down presses and touches
 on the bar; no other typing is passed on. The game draws at 1085×30 and tiny-dfr scales
 it 2× to the bar's 2170×60 pixels.
+
+### Who can use the sockets
+
+tiny-dfr-plus's sockets are files in `/run/tiny-dfr/`, a directory systemd creates for
+the daemon and only root can write to, so no other account can claim their names first.
+For every frame the kernel tells the daemon which user sent it; frames from anyone but
+the user logged in at the screen (or root) are dropped, and only that user is sent key
+and touch events. Programs check that events come from `/run/tiny-dfr/…` before using
+them.
+
+The same patch has a full-colour backdrop socket (`/run/tiny-dfr/backdrop.sock`) used by
+Touch Bar Scenes, with the same checks. Its key-column events, which say roughly where on
+the keyboard a key was pressed but never which key, are off unless `KeyPulses = true` is
+set in `/etc/tiny-dfr/config.toml`.
+
+The patch is built from a fixed upstream tiny-dfr commit (`a79f2f4`), fetched by its full
+SHA and checked out detached before building.
 
 tiny-dfr-plus is shared with the
 [Touch Bar Waveform](https://github.com/aesthytik/omarchy-touchbar-waveform) plugin. Each

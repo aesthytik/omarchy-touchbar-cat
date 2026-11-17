@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "io.github.aesthytik.touchbar-cat",
   "name": "Box Cat",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": "aesthytik",
   "license": "MIT",
   "description": "A pixel cat jumping over boxes on the MacBook Touch Bar. Super+Ctrl+G to play, Space to jump.",

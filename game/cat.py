@@ -16,7 +16,8 @@ import time
 W, H = 1085, 30          # logical pixels; tiny-dfr scales them 2x to the 2170x60 bar
 GROUND = 27              # y of the ground line
 FPS = 50
-TAKEOVER = b"\0tiny-dfr-takeover"
+# Lives in root-owned /run/tiny-dfr, so only the daemon can own this name.
+TAKEOVER = "/run/tiny-dfr/takeover.sock"
 KEY_ESC, KEY_SPACE, KEY_UP = 1, 57, 103
 QUIT_ZONE_PX = 70        # physical pixels at the right end that quit when tapped
 
@@ -296,10 +297,11 @@ def main():
             if not r:
                 break
             try:
-                msg = sock.recv(64)
+                msg, sender = sock.recvfrom(64)
             except BlockingIOError:
                 continue
-            if len(msg) != 11 or msg[:4] != b"TDE1":
+            # Only the daemon can send from its socket path; ignore anyone else.
+            if sender != TAKEOVER or len(msg) != 11 or msg[:4] != b"TDE1":
                 continue
             kind, code, value = struct.unpack("<BHi", msg[4:])
             if kind == 1 and value == 1:
@@ -317,7 +319,7 @@ def main():
         game.draw(screen)
         try:
             sock.sendto(header + screen.buf, TAKEOVER)
-        except (ConnectionRefusedError, FileNotFoundError, BlockingIOError):
+        except (ConnectionRefusedError, FileNotFoundError, PermissionError, BlockingIOError):
             pass
 
 
